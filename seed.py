@@ -34,6 +34,13 @@ def main() -> None:
     conn.autocommit = False
     cur = conn.cursor()
 
+    cur.execute("SELECT COUNT(*) FROM products")
+    if cur.fetchone()[0] > 0:
+        print("Already seeded. Skipping.")
+        cur.close()
+        conn.close()
+        return
+
     end_dt   = datetime.now(timezone.utc)
     start_dt = end_dt - timedelta(days=730)
 

@@ -1,23 +1,16 @@
-"""Apply schema.sql then seed 200k products."""
 import os
-import pymysql
+import psycopg2
 from dotenv import load_dotenv
 
 load_dotenv()
 
-conn = pymysql.connect(
-    host=os.getenv("DB_HOST", "localhost"),
-    port=int(os.getenv("DB_PORT", 3306)),
-    user=os.getenv("DB_USER", "root"),
-    password=os.getenv("DB_PASSWORD", ""),
-    autocommit=True,
-)
+conn = psycopg2.connect(os.environ["DATABASE_URL"])
+conn.autocommit = True
+cur = conn.cursor()
 
 with open("schema.sql") as f:
-    for statement in f.read().split(";"):
-        s = statement.strip()
-        if s:
-            conn.cursor().execute(s)
+    cur.execute(f.read())
 
+cur.close()
 conn.close()
 print("Schema applied.")
