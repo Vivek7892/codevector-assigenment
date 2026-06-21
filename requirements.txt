@@ -1,6 +1,5 @@
 fastapi
 uvicorn[standard]
 asyncpg
-aiomysql
 psycopg2-binary
 python-dotenv

@@ -241,7 +241,7 @@ tbody tr:hover td { background: var(--row-hover); }
 // ── Config ────────────────────────────────────────────────────────────────
 // In production the API URL is injected via window.API_URL (set by Render
 // env var or a config.js). Falls back to localhost for local dev.
-const API = (window.API_URL || "http://localhost:8000").replace(/\/$/, "");
+const API = (window.API_URL || "https://codevector-assigenment.onrender.com").replace(/\/$/, "");
 
 // ── State ─────────────────────────────────────────────────────────────────
 let cursorStack     = [null];   // cursorStack[i] = cursor to fetch page i
