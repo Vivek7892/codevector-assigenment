@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Product Browser</title>
+<style>
+/* ── Tokens ─────────────────────────────────────────────────────────── */
+:root {
+  --bg:        #f0f2f5;
+  --surface:   #ffffff;
+  --border:    #e2e6ea;
+  --text:      #1a1d23;
+  --muted:     #6b7280;
+  --accent:    #4f46e5;
+  --accent-h:  #4338ca;
+  --danger:    #ef4444;
+  --badge-bg:  #ede9fe;
+  --badge-fg:  #5b21b6;
+  --row-hover: #f8f7ff;
+  --skeleton:  #e5e7eb;
+  --skel-shine:#f3f4f6;
+  --shadow:    0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.05);
+}
+/* ── Reset ───────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  transition: background .2s, color .2s;
+}
+
+/* ── Layout ──────────────────────────────────────────────────────────── */
+.page { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; }
+
+/* ── Header ──────────────────────────────────────────────────────────── */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; }
+header h1 span { color: var(--accent); }
+
+
+
+/* ── Toolbar ─────────────────────────────────────────────────────────── */
+.toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+.toolbar label { font-size: .85rem; color: var(--muted); white-space: nowrap; }
+select {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: .9rem;
+  cursor: pointer;
+  outline: none;
+}
+select:focus { border-color: var(--accent); }
+.btn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: none;
+  font-size: .9rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background .15s, opacity .15s;
+}
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-h); }
+.btn-primary:disabled { opacity: .4; cursor: default; }
+.btn-ghost {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { background: var(--border); }
+.btn-ghost:disabled { opacity: .35; cursor: default; }
+
+/* ── Category pills ──────────────────────────────────────────────────── */
+.pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.pill {
+  padding: 5px 14px;
+  border-radius: 20px;
+  font-size: .8rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  transition: all .15s;
+}
+.pill:hover, .pill.active {
+  background: var(--badge-bg);
+  color: var(--badge-fg);
+  border-color: var(--accent);
+}
+
+/* ── Table card ──────────────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+table { width: 100%; border-collapse: collapse; }
+th {
+  background: var(--bg);
+  text-align: left;
+  padding: 11px 16px;
+  font-size: .75rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+td {
+  padding: 12px 16px;
+  font-size: .88rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--row-hover); }
+
+/* category badge inside table */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: .75rem;
+  font-weight: 600;
+  background: var(--badge-bg);
+  color: var(--badge-fg);
+}
+.price { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+/* ── Skeleton loader ─────────────────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
+.skeleton td {
+  padding: 14px 16px;
+}
+.skel-line {
+  height: 14px;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--skeleton) 25%, var(--skel-shine) 50%, var(--skeleton) 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+/* ── Pagination bar ──────────────────────────────────────────────────── */
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+.pagination .status { font-size: .85rem; color: var(--muted); margin-left: auto; }
+
+/* ── Responsive: hide less important columns on small screens ────────── */
+@media (max-width: 640px) {
+  .col-id, .col-updated { display: none; }
+  td, th { padding: 10px 10px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header>
+    <h1>Product <span>Browser</span></h1>
+  </header>
+
+  <div class="toolbar">
+    <label for="catSelect">Category</label>
+    <select id="catSelect"><option value="">All categories</option></select>
+
+    <label for="limitSelect" style="margin-left:8px">Per page</label>
+    <select id="limitSelect">
+      <option value="10">10</option>
+      <option value="20" selected>20</option>
+      <option value="50">50</option>
+    </select>
+
+    <button class="btn btn-primary" id="applyBtn">Apply</button>
+  </div>
+
+  <div class="pills" id="pills"></div>
+
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th class="col-id">#</th>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Created</th>
+          <th class="col-updated">Updated</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="pagination">
+    <button class="btn btn-ghost" id="prevBtn" disabled>← Prev</button>
+    <button class="btn btn-ghost" id="nextBtn" disabled>Next →</button>
+    <span class="status" id="status"></span>
+  </div>
+
+</div>
+<script>
+// ── Config ────────────────────────────────────────────────────────────────
+// In production the API URL is injected via window.API_URL (set by Render
+// env var or a config.js). Falls back to localhost for local dev.
+const API = (window.API_URL || "http://localhost:8000").replace(/\/$/, "");
+
+// ── State ─────────────────────────────────────────────────────────────────
+let cursorStack     = [null];   // cursorStack[i] = cursor to fetch page i
+let stackIdx        = 0;
+let currentCategory = "";
+let currentLimit    = 20;
+
+// ── DOM refs ──────────────────────────────────────────────────────────────
+const tbody      = document.getElementById("tbody");
+const prevBtn    = document.getElementById("prevBtn");
+const nextBtn    = document.getElementById("nextBtn");
+const status     = document.getElementById("status");
+const catSelect  = document.getElementById("catSelect");
+const limitSel   = document.getElementById("limitSelect");
+const pillsEl    = document.getElementById("pills");
+
+// ── Categories ────────────────────────────────────────────────────────────
+async function loadCategories() {
+  const res  = await fetch(`${API}/categories`);
+  const cats = await res.json();
+
+  // dropdown
+  cats.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = opt.textContent = c;
+    catSelect.appendChild(opt);
+  });
+
+  // pills
+  const all = document.createElement("button");
+  all.className = "pill active";
+  all.textContent = "All";
+  all.dataset.cat = "";
+  pillsEl.appendChild(all);
+
+  cats.forEach(c => {
+    const btn = document.createElement("button");
+    btn.className = "pill";
+    btn.textContent = c;
+    btn.dataset.cat = c;
+    pillsEl.appendChild(btn);
+  });
+
+  pillsEl.addEventListener("click", e => {
+    const pill = e.target.closest(".pill");
+    if (!pill) return;
+    pillsEl.querySelectorAll(".pill").forEach(p => p.classList.remove("active"));
+    pill.classList.add("active");
+    catSelect.value  = pill.dataset.cat;
+    currentCategory  = pill.dataset.cat;
+    resetAndFetch();
+  });
+}
+
+// ── Skeleton ──────────────────────────────────────────────────────────────
+function showSkeleton() {
+  const cols = [80, 200, 100, 60, 130, 120];
+  tbody.innerHTML = Array.from({ length: currentLimit > 20 ? 10 : currentLimit }, () =>
+    `<tr class="skeleton">${cols.map(w =>
+      `<td><div class="skel-line" style="width:${w}px;max-width:100%"></div></td>`
+    ).join("")}</tr>`
+  ).join("");
+}
+
+// ── Fetch & render ────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+async function goToPage(cursorForPage) {
+  showSkeleton();
+  status.textContent = "Loading…";
+  prevBtn.disabled = nextBtn.disabled = true;
+
+  const params = new URLSearchParams({ limit: currentLimit });
+  if (currentCategory) params.set("category", currentCategory);
+  if (cursorForPage)   params.set("cursor", cursorForPage);
+
+  const data = await fetch(`${API}/products?${params}`).then(r => r.json());
+
+  tbody.innerHTML = data.items.map(p => `
+    <tr>
+      <td class="col-id" style="color:var(--muted);font-size:.8rem">${p.id}</td>
+      <td>${esc(p.name)}</td>
+      <td><span class="badge">${esc(p.category)}</span></td>
+      <td class="price">$${p.price.toFixed(2)}</td>
+      <td style="color:var(--muted);font-size:.82rem">${p.created_at.replace("T"," ").slice(0,19)}</td>
+      <td class="col-updated" style="color:var(--muted);font-size:.82rem">${p.updated_at.replace("T"," ").slice(0,19)}</td>
+    </tr>`).join("");
+
+  if (data.next_cursor) cursorStack[stackIdx + 1] = data.next_cursor;
+
+  prevBtn.disabled = stackIdx === 0;
+  nextBtn.disabled = !data.next_cursor;
+  status.textContent = `Page ${stackIdx + 1} · ${data.items.length} items`;
+}
+
+function resetAndFetch() {
+  cursorStack = [null];
+  stackIdx    = 0;
+  goToPage(null);
+}
+
+// ── Events ────────────────────────────────────────────────────────────────
+prevBtn.addEventListener("click", () => { stackIdx--; goToPage(cursorStack[stackIdx]); });
+nextBtn.addEventListener("click", () => { stackIdx++; goToPage(cursorStack[stackIdx]); });
+
+document.getElementById("applyBtn").addEventListener("click", () => {
+  currentCategory = catSelect.value;
+  currentLimit    = parseInt(limitSel.value, 10);
+  // sync pill highlight
+  pillsEl.querySelectorAll(".pill").forEach(p => {
+    p.classList.toggle("active", p.dataset.cat === currentCategory);
+  });
+  resetAndFetch();
+});
+
+// ── Boot ──────────────────────────────────────────────────────────────────
+loadCategories();
+goToPage(null);
+</script>
+</body>
+</html>
